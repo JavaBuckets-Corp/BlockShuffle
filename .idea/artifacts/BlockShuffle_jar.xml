@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="BlockShuffle:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/BlockShuffle_jar</output-path>
+    <root id="archive" name="BlockShuffle.jar">
+      <element id="module-output" name="BlockShuffle" />
+    </root>
+  </artifact>
+</component>

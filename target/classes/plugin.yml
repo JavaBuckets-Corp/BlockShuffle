@@ -1,0 +1,12 @@
+name: BlockShuffle
+version: 0.0.1
+main: com.javabuckets.blockshuffle.BlockShuffle
+authors: [JavaBuckets]
+description: You and your friends must find and stand on a random block before the timer runs out. It continues till someone loses.
+api-version: 1.13
+
+commands:
+   blockshuffle:
+      description: Start the block shuffle
+      usage: /blockshuffle ...<player>
+      permission: blockshuffle.canstart
