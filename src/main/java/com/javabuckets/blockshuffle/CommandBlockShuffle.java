@@ -12,6 +12,17 @@ public class CommandBlockShuffle implements CommandExecutor {
         if (sender instanceof Player) {
             Player playerSender = (Player) sender;
 
+            if (BlockShuffle.isRunning) {
+                if (args[0].equals("stop")) {
+                    BlockShuffle.deinitialize();
+                    Bukkit.broadcastMessage("BlockShuffle has stopped");
+                    return true;
+                } else
+                {
+                    return false;
+                }
+            }
+
             BlockShuffle.contestants.add(playerSender);
 
             for (String arg : args) {

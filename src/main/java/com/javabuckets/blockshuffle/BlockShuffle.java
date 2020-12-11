@@ -9,7 +9,6 @@ import org.bukkit.scheduler.BukkitScheduler;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Random;
 
 public final class BlockShuffle extends JavaPlugin {
 
@@ -20,6 +19,7 @@ public final class BlockShuffle extends JavaPlugin {
     public static ArrayList<Player> contestants = new ArrayList<>();
     public static HashMap<Player, Material> targets = new HashMap<>();
     public static HashMap<Player, Integer> timers = new HashMap<>();
+    public static HashMap<Player, Integer> scores = new HashMap<>();
 
     @Override
     public void onEnable() {
@@ -35,20 +35,33 @@ public final class BlockShuffle extends JavaPlugin {
 
                         // If the timer hits below 0 for any contestant we end the game
                         if (timers.get(contestant) < 0) {
-                            isRunning = false;
-                            deinitialize(contestant);
+                            Bukkit.broadcastMessage("Game over! " + contestant.getDisplayName() + " lost as they couldn't stand on " + targets.get(contestant).name().toLowerCase().replace('_', ' ') + " in time!");
+                            deinitialize();
                         }
 
-                        // Notify the contestants when any contestant's timer hits 10 seconds
+                        // Notify time left
                         if (timers.get(contestant) == 10) {
                             contestant.sendMessage("You have 10 seconds left!");
+                        } else if (timers.get(contestant) == 60) {
+                            contestant.sendMessage("You have 1 minute left!");
                         }
+
 
                         // This will still run if someone lose, so we have to wrap the rest of the checks in another if statement and check if isRunning is still true
                         if (isRunning) {
                             // If the contestant is standing on their target
                             if (contestant.getLocation().getBlock().getRelative(BlockFace.DOWN).getBlockData().getMaterial() == targets.get(contestant)) {
                                 foundBlockSuccess(contestant);
+
+                                if (scores.get(contestant) == 3) {
+                                    Bukkit.broadcastMessage(contestant.getDisplayName() + " has unlocked the medium tier!");
+                                }
+                                else if (scores.get(contestant) == 7) {
+                                    Bukkit.broadcastMessage(contestant.getDisplayName() + " has unlocked the nether tier!");
+                                }
+                                else if (scores.get(contestant) == 12) {
+                                    Bukkit.broadcastMessage(contestant.getDisplayName() + " has unlocked the hard tier! Good luck...");
+                                }
                             }
 
                             // Last thing to do is to decrease timer
@@ -67,84 +80,31 @@ public final class BlockShuffle extends JavaPlugin {
 
     public static void foundBlockSuccess(Player contestant) {
         timers.put(contestant, defaultTimer);
-        targets.put(contestant, getRandomBlock());
+        scores.put(contestant, scores.get(contestant) + 1);
+        targets.put(contestant, RandomBlockSelector.getRandomBlock(scores.get(contestant)));
         informContestantOfBlock(contestant);
     }
 
     public static void initialize() {
         for (Player contestant : contestants) {
             timers.put(contestant, defaultTimer);
-            targets.put(contestant, getRandomBlock());
+            targets.put(contestant, RandomBlockSelector.getRandomBlock(0));
+            scores.put(contestant, 0);
             informContestantOfBlock(contestant);
         }
     }
 
     public static void informContestantOfBlock(Player contestant) {
-        contestant.sendMessage("You must find and stand on " + targets.get(contestant).name().toLowerCase().replace('_', ' '));
+        String prettyName = targets.get(contestant).name().toLowerCase().replace('_', ' ');
+        Bukkit.broadcastMessage(contestant.getDisplayName() + " must find " + prettyName + "!");
+        contestant.sendMessage("You must find and stand on " + prettyName);
     }
 
-    public static void deinitialize(Player loser) {
-        Bukkit.broadcastMessage("Game over! " + loser.getDisplayName() + " lost as they couldn't stand on " + targets.get(loser).name().toLowerCase().replace('_', ' ') + " in time!");
+    public static void deinitialize() {
+        isRunning = false;
         contestants.clear();
         targets.clear();
+        scores.clear();
         timers.clear();
-    }
-
-    public static Material getRandomBlock() {
-        Material material = null;
-        Random random = new Random();
-        while (material == null) {
-            material = Material.values()[random.nextInt(Material.values().length)];
-
-            switch (material) {
-                case AIR:
-                case BARRIER:
-                case END_STONE:
-                case END_PORTAL:
-                case END_PORTAL_FRAME:
-                case END_ROD:
-                case END_CRYSTAL:
-                case END_GATEWAY:
-                case END_STONE_BRICK_SLAB:
-                case END_STONE_BRICK_STAIRS:
-                case END_STONE_BRICK_WALL:
-                case END_STONE_BRICKS:
-                case DRAGON_EGG:
-                case DRAGON_HEAD:
-                case DRAGON_WALL_HEAD:
-                case BEACON:
-                case INFESTED_CHISELED_STONE_BRICKS:
-                case INFESTED_COBBLESTONE:
-                case INFESTED_CRACKED_STONE_BRICKS:
-                case INFESTED_MOSSY_STONE_BRICKS:
-                case INFESTED_STONE:
-                case INFESTED_STONE_BRICKS:
-                case COMMAND_BLOCK:
-                case CHORUS_FLOWER:
-                case CHORUS_FRUIT:
-                case CHORUS_PLANT:
-                case CONDUIT:
-                case CREEPER_HEAD:
-                case ZOMBIE_HEAD:
-                case SKELETON_SKULL:
-                case PLAYER_HEAD:
-                case WITHER_SKELETON_SKULL:
-                case CREEPER_WALL_HEAD:
-                case ZOMBIE_WALL_HEAD:
-                case SKELETON_WALL_SKULL:
-                case PLAYER_WALL_HEAD:
-                case WITHER_SKELETON_WALL_SKULL:
-                case WITHER_ROSE:
-                case POTTED_WITHER_ROSE:
-                    material = null;
-                    break;
-                default:
-                    if (!(material.isBlock())) {
-                        material = null;
-                    }
-                    break;
-            }
-        }
-        return material;
     }
 }
