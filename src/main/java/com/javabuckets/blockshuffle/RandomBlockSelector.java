@@ -32,6 +32,8 @@ public class RandomBlockSelector {
             Material.INFESTED_STONE,
             Material.INFESTED_STONE_BRICKS,
             Material.COMMAND_BLOCK,
+            Material.CHAIN_COMMAND_BLOCK,
+            Material.REPEATING_COMMAND_BLOCK,
             Material.CHORUS_FLOWER,
             Material.CHORUS_FRUIT,
             Material.CHORUS_PLANT,
