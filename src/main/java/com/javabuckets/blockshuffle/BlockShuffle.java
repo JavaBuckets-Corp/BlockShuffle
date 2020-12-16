@@ -46,7 +46,6 @@ public final class BlockShuffle extends JavaPlugin {
                             contestant.sendMessage("You have 1 minute left!");
                         }
 
-
                         // This will still run if someone lose, so we have to wrap the rest of the checks in another if statement and check if isRunning is still true
                         if (isRunning) {
                             // If the contestant is standing on their target

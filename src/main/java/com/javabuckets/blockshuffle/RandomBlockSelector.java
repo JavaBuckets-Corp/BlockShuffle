@@ -1,6 +1,5 @@
 package com.javabuckets.blockshuffle;
 
-import org.bukkit.Bukkit;
 import org.bukkit.Material;
 
 import java.util.Arrays;
@@ -126,6 +125,11 @@ public class RandomBlockSelector {
             Material.YELLOW_SHULKER_BOX,
             Material.FROSTED_ICE,
             Material.PISTON_HEAD,
+            Material.PURPUR_PILLAR,
+            Material.PURPUR_BLOCK,
+            Material.PURPUR_SLAB,
+            Material.PURPUR_STAIRS,
+
     };
 
     private static Material[] netherTier = {
