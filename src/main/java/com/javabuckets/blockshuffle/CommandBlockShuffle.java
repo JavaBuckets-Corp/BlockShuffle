@@ -2,11 +2,16 @@ package com.javabuckets.blockshuffle;
 
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabExecutor;
 import org.bukkit.entity.Player;
 
-public class CommandBlockShuffle implements CommandExecutor {
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
+
+public class CommandBlockShuffle implements TabExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (sender instanceof Player) {
@@ -36,9 +41,29 @@ public class CommandBlockShuffle implements CommandExecutor {
             }
 
             BlockShuffle.isRunning = true;
-            BlockShuffle.initialize(); // TODO: /blockshuffle <timer> ...<player>
+            BlockShuffle.initialize();
             return true;
         }
         return false;
+    }
+
+    @Override
+    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+        if (sender instanceof Player) {
+            if (args.length == 1) {
+                return Collections.singletonList(Arrays.toString(ShuffleMode.values()));
+            }
+            if (args.length == 2) {
+                if (args[0].equals(ShuffleMode.DEFAULT.toString()) || args[0].equals(ShuffleMode.DEFAULT_SAME_BLOCKS.toString())) {
+                    return Collections.singletonList("5");
+                } else {
+                    return Collections.singletonList("30");
+                }
+            }
+            if (args.length > 2) {
+                return Bukkit.getOnlinePlayers().stream().map(Player::getName).collect(Collectors.toList());
+            }
+        }
+        return null;
     }
 }
