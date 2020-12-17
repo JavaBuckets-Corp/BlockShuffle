@@ -1,6 +1,7 @@
 package com.javabuckets.blockshuffle;
 
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
@@ -53,13 +54,13 @@ public final class BlockShuffle extends JavaPlugin {
                                 foundBlockSuccess(contestant);
 
                                 if (scores.get(contestant) == 3) {
-                                    Bukkit.broadcastMessage(contestant.getDisplayName() + " has unlocked the medium tier!");
+                                    Bukkit.broadcastMessage(ChatColor.GREEN + contestant.getDisplayName() + " has unlocked the medium tier!");
                                 }
                                 else if (scores.get(contestant) == 7) {
-                                    Bukkit.broadcastMessage(contestant.getDisplayName() + " has unlocked the nether tier!");
+                                    Bukkit.broadcastMessage(ChatColor.RED + contestant.getDisplayName() + " has unlocked the nether tier!");
                                 }
                                 else if (scores.get(contestant) == 12) {
-                                    Bukkit.broadcastMessage(contestant.getDisplayName() + " has unlocked the hard tier! Good luck...");
+                                    Bukkit.broadcastMessage(ChatColor.BLACK + contestant.getDisplayName() + " has unlocked the hard tier! Good luck...");
                                 }
                             }
 
@@ -95,8 +96,8 @@ public final class BlockShuffle extends JavaPlugin {
 
     public static void informContestantOfBlock(Player contestant) {
         String prettyName = targets.get(contestant).name().toLowerCase().replace('_', ' ');
-        Bukkit.broadcastMessage(contestant.getDisplayName() + " must find " + prettyName + "!");
-        contestant.sendMessage("You must find and stand on " + prettyName);
+        Bukkit.broadcastMessage(ChatColor.GOLD + contestant.getDisplayName() + " must find " + prettyName + "!");
+        contestant.sendMessage(ChatColor.BLUE + "You must find and stand on " + prettyName);
     }
 
     public static void deinitialize() {
