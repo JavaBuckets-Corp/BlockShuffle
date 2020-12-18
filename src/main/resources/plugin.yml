@@ -8,5 +8,5 @@ api-version: 1.13
 commands:
    blockshuffle:
       description: Start the block shuffle
-      usage: /blockshuffle ...<player>
+      usage: /blockshuffle <gamemode> <timer> ...<player>
       permission: blockshuffle.canstart
