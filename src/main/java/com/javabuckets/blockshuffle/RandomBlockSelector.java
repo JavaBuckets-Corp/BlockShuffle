@@ -129,7 +129,6 @@ public class RandomBlockSelector {
             Material.PURPUR_BLOCK,
             Material.PURPUR_SLAB,
             Material.PURPUR_STAIRS,
-
     };
 
     private static Material[] netherTier = {
@@ -228,6 +227,10 @@ public class RandomBlockSelector {
             Material.SMOOTH_QUARTZ_STAIRS,
             Material.WEEPING_VINES,
             Material.BONE_BLOCK,
+            Material.RED_NETHER_BRICKS,
+            Material.RED_NETHER_BRICK_SLAB,
+            Material.RED_NETHER_BRICK_STAIRS,
+            Material.RED_NETHER_BRICK_WALL,
     };
 
     private static Material[] hardTier = {
@@ -250,7 +253,8 @@ public class RandomBlockSelector {
             Material.SEA_PICKLE,
             Material.STICKY_PISTON,
             Material.ATTACHED_MELON_STEM,
-            Material.ATTACHED_PUMPKIN_STEM
+            Material.ATTACHED_PUMPKIN_STEM,
+
     };
 
     private static Material[] mediumTier = {
