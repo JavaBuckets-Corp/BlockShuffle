@@ -1,5 +1,7 @@
 package com.javabuckets.blockshuffle;
 
+import net.md_5.bungee.api.ChatMessageType;
+import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -7,10 +9,12 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitScheduler;
+import org.bukkit.scoreboard.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 public final class BlockShuffle extends JavaPlugin {
 
@@ -27,57 +31,64 @@ public final class BlockShuffle extends JavaPlugin {
 
     public static ArrayList<Material> sameTargets = new ArrayList<>();
 
+    private static ScoreboardManager manager;
+    private static Scoreboard board;
+    private static Objective objective;
+    private static Team team;
+
     @Override
     public void onEnable() {
         // Plugin startup logic
-        this.getCommand("blockshuffle").setExecutor(new CommandBlockShuffle());
+        Objects.requireNonNull(this.getCommand("blockshuffle")).setExecutor(new CommandBlockShuffle());
 
         BukkitScheduler scheduler = getServer().getScheduler();
-        scheduler.scheduleSyncRepeatingTask(this, new Runnable() {
-            @Override
-            public void run() {
-                if (isRunning) {
-                    if (gamemode == ShuffleMode.DEFAULT || gamemode == ShuffleMode.DEFAULT_SAME_BLOCKS) {
-                        for (Player contestant : contestants) {
-                            // Win condition
-                            if (timers.get(contestant) <= 0) {
-                                Bukkit.broadcastMessage("Game over! " + contestant.getDisplayName() + " lost as they couldn't stand on " + targets.get(contestant).name().toLowerCase().replace('_', ' ') + " in time!");
-                                deinitialize(); // TODO: Set contestant to spectator, if only player remain, they win.
-                            }
+        scheduler.scheduleSyncRepeatingTask(this, () -> {
+            if (isRunning) {
+                if (gamemode == ShuffleMode.DEFAULT || gamemode == ShuffleMode.DEFAULT_SAME_BLOCKS) {
+                    for (Player contestant : contestants) {
+                        // Win condition
+                        if (timers.get(contestant) <= 0) {
+                            Bukkit.broadcastMessage("Game over! " + contestant.getDisplayName() + " lost as they couldn't stand on " + targets.get(contestant).name().toLowerCase().replace('_', ' ') + " in time!");
+                            deinitialize(); // TODO: Set contestant to spectator, if only player remain, they win.
+                        }
 
+                        if (isRunning) {
                             // Notifications
                             if (timers.get(contestant) == 10) {
                                 contestant.sendMessage("You have 10 seconds left!");
                             } else if (timers.get(contestant) == 60) {
                                 contestant.sendMessage("You have 1 minute left!");
                             }
+                            contestant.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(ChatColor.RED + timers.get(contestant).toString()));
                         }
-                    } else {
-                        // Win condition
-                        if (globalTimer <= 0) {
-                            ArrayList<Player> winners = new ArrayList<>();
-                            Map.Entry<Player, Integer> maxEntry = null;
+                    }
+                } else {
+                    // Win condition
+                    if (globalTimer <= 0) {
+                        ArrayList<Player> winners = new ArrayList<>();
+                        Map.Entry<Player, Integer> maxEntry = null;
 
-                            for (Map.Entry<Player, Integer> entry : scores.entrySet()) {
-                                if (maxEntry == null || entry.getValue().compareTo(maxEntry.getValue()) > 0) {
-                                    maxEntry = entry;
-                                    winners.clear();
-                                    winners.add(entry.getKey());
-                                }
-                                if (entry.getValue().equals(maxEntry.getValue())) {
-                                    winners.add(entry.getKey());
-                                }
+                        for (Map.Entry<Player, Integer> entry : scores.entrySet()) {
+                            if (maxEntry == null || entry.getValue().compareTo(maxEntry.getValue()) > 0) {
+                                maxEntry = entry;
+                                winners.clear();
+                                winners.add(entry.getKey());
                             }
-
-                            if (winners.size() > 1) {
-                                Bukkit.broadcastMessage("We have a tie!");
-                            } else {
-                                Bukkit.broadcastMessage("The winner is " + winners.get(0).getName() + "!");
+                            if (entry.getValue().equals(maxEntry.getValue())) {
+                                winners.add(entry.getKey());
                             }
-
-                            deinitialize();
                         }
 
+                        if (winners.size() > 1) {
+                            Bukkit.broadcastMessage("We have a tie!");
+                        } else {
+                            Bukkit.broadcastMessage("The winner is " + winners.get(0).getName() + "!");
+                        }
+
+                        deinitialize();
+                    }
+
+                    if (isRunning) {
                         // Notifications
                         if (globalTimer == 10) {
                             Bukkit.broadcastMessage("10 seconds left!");
@@ -86,36 +97,39 @@ public final class BlockShuffle extends JavaPlugin {
                         } else if (globalTimer % (5 * 60) == 0) {
                             Bukkit.broadcastMessage("There is " + (globalTimer / 60) + " minutes left!");
                         }
-                    }
-                    for (Player contestant : contestants) {
-                        // This will still run if someone lose, so we have to wrap the rest of the checks in another if statement and check if isRunning is still true
-                        if (isRunning) {
-                            // If the contestant is standing on their target
-                            if (contestant.getLocation().getBlock().getRelative(BlockFace.DOWN).getBlockData().getMaterial() == targets.get(contestant)) {
-                                foundBlockSuccess(contestant);
-
-                                if (scores.get(contestant) == (gamemode == ShuffleMode.DEFAULT ? 3 : 6)) {
-                                    Bukkit.broadcastMessage(ChatColor.GREEN + contestant.getDisplayName() + " has unlocked the medium tier!");
-                                }
-                                else if (scores.get(contestant) == (gamemode == ShuffleMode.DEFAULT ? 7 : 12)) {
-                                    Bukkit.broadcastMessage(ChatColor.RED + contestant.getDisplayName() + " has unlocked the nether tier!");
-                                }
-                                else if (scores.get(contestant) == (gamemode == ShuffleMode.DEFAULT ? 12 : 20)) {
-                                    Bukkit.broadcastMessage(ChatColor.BLACK + contestant.getDisplayName() + " has unlocked the hard tier! Good luck...");
-                                }
-                            }
-
-                            if (gamemode == ShuffleMode.DEFAULT || gamemode == ShuffleMode.DEFAULT_SAME_BLOCKS) {
-                                // Last thing to do is to decrease timer
-                                timers.put(contestant, timers.get(contestant) - 1);
-                            }
+                        for (Player contestant : contestants) {
+                            contestant.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(ChatColor.RED + String.valueOf(globalTimer)));
                         }
                     }
+                }
+                for (Player contestant : contestants) {
+                    // This will still run if someone lose, so we have to wrap the rest of the checks in another if statement and check if isRunning is still true
                     if (isRunning) {
-                        if (gamemode == ShuffleMode.HIGHEST_BEFORE_TIMER || gamemode == ShuffleMode.HIGHEST_BEFORE_TIMER_SAME_BLOCKS) {
-                            // Last thing to do is to decrease timer
-                            globalTimer--;
+                        // If the contestant is standing on their target
+                        if (contestant.getLocation().getBlock().getRelative(BlockFace.DOWN).getBlockData().getMaterial() == targets.get(contestant)) {
+                            foundBlockSuccess(contestant);
+
+                            if (scores.get(contestant) == (gamemode == ShuffleMode.DEFAULT ? 3 : 6)) {
+                                Bukkit.broadcastMessage(ChatColor.GREEN + contestant.getDisplayName() + " has unlocked the medium tier!");
+                            }
+                            else if (scores.get(contestant) == (gamemode == ShuffleMode.DEFAULT ? 7 : 12)) {
+                                Bukkit.broadcastMessage(ChatColor.RED + contestant.getDisplayName() + " has unlocked the nether tier!");
+                            }
+                            else if (scores.get(contestant) == (gamemode == ShuffleMode.DEFAULT ? 12 : 20)) {
+                                Bukkit.broadcastMessage(ChatColor.BLACK + contestant.getDisplayName() + " has unlocked the hard tier! Good luck...");
+                            }
                         }
+
+                        if (gamemode == ShuffleMode.DEFAULT || gamemode == ShuffleMode.DEFAULT_SAME_BLOCKS) {
+                            // Last thing to do is to decrease timer
+                            timers.put(contestant, timers.get(contestant) - 1);
+                        }
+                    }
+                }
+                if (isRunning) {
+                    if (gamemode == ShuffleMode.HIGHEST_BEFORE_TIMER || gamemode == ShuffleMode.HIGHEST_BEFORE_TIMER_SAME_BLOCKS) {
+                        // Last thing to do is to decrease timer
+                        globalTimer--;
                     }
                 }
             }
@@ -129,6 +143,7 @@ public final class BlockShuffle extends JavaPlugin {
 
     public static void foundBlockSuccess(Player contestant) {
         scores.put(contestant, scores.get(contestant) + 1);
+        objective.getScore(contestant.getName()).setScore(scores.get(contestant));
 
         if (gamemode == ShuffleMode.DEFAULT || gamemode == ShuffleMode.DEFAULT_SAME_BLOCKS) {
             timers.put(contestant, defaultTimer);
@@ -158,9 +173,23 @@ public final class BlockShuffle extends JavaPlugin {
             }
         }
 
+        // Scoreboard init
+        manager = Bukkit.getScoreboardManager();
+        board = manager.getNewScoreboard();
+        objective = board.registerNewObjective("points", "points", "BlockShuffle");
+        objective.setDisplaySlot(DisplaySlot.SIDEBAR);
+        team = board.registerNewTeam("BlockShuffle");
+
+        team.setDisplayName("BlockShuffle");
+        team.setAllowFriendlyFire(false);
+
         for (Player contestant : contestants) {
             timers.put(contestant, defaultTimer);
             scores.put(contestant, 0);
+
+            team.addEntry(contestant.getName());
+            objective.getScore(contestant.getName()).setScore(0);
+            contestant.setScoreboard(board);
 
             if (gamemode == ShuffleMode.DEFAULT || gamemode == ShuffleMode.HIGHEST_BEFORE_TIMER) {
                 targets.put(contestant, RandomBlockSelector.getRandomBlock(0));
@@ -169,8 +198,6 @@ public final class BlockShuffle extends JavaPlugin {
             }
             informContestantOfBlock(contestant);
         }
-
-        // Scoreboard init
     }
 
     public static void informContestantOfBlock(Player contestant) {
@@ -184,6 +211,12 @@ public final class BlockShuffle extends JavaPlugin {
 
     public static void deinitialize() {
         isRunning = false;
+
+        for (Player contestant : contestants) {
+            team.removeEntry(contestant.getName());
+            contestant.setScoreboard(manager.getNewScoreboard());
+        }
+
         contestants.clear();
         targets.clear();
         scores.clear();
