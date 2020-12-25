@@ -1,6 +1,7 @@
 package com.javabuckets.blockshuffle;
 
 import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
@@ -50,6 +51,12 @@ public class CommandBlockShuffle implements TabExecutor {
                                 } else {
                                     contestants.add(p);
                                 }
+                            }
+                        }
+
+                        for (Player p : contestants) {
+                            if (p.getGameMode() != GameMode.SURVIVAL) {
+                                p.setGameMode(GameMode.SURVIVAL);
                             }
                         }
 

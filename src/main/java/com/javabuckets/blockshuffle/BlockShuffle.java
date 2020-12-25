@@ -4,6 +4,7 @@ import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
@@ -28,6 +29,7 @@ public final class BlockShuffle extends JavaPlugin {
     public static HashMap<Player, Material> targets = new HashMap<>();
     public static HashMap<Player, Integer> timers = new HashMap<>();
     public static HashMap<Player, Integer> scores = new HashMap<>();
+    public static ArrayList<Player> losers = new ArrayList<>();
 
     public static ArrayList<Material> sameTargets = new ArrayList<>();
 
@@ -46,21 +48,37 @@ public final class BlockShuffle extends JavaPlugin {
             if (isRunning) {
                 if (gamemode == ShuffleMode.DEFAULT || gamemode == ShuffleMode.DEFAULT_SAME_BLOCKS) {
                     for (Player contestant : contestants) {
-                        // Win condition
+                        // Player lose
                         if (timers.get(contestant) <= 0) {
-                            Bukkit.broadcastMessage("Game over! " + contestant.getDisplayName() + " lost as they couldn't stand on " + targets.get(contestant).name().toLowerCase().replace('_', ' ') + " in time!");
-                            deinitialize(); // TODO: Set contestant to spectator, if only player remain, they win.
+                            contestant.setGameMode(GameMode.SPECTATOR);
+                            Bukkit.broadcastMessage(ChatColor.RED + contestant.getDisplayName() + " is eliminated, as they couldn't stand on " + targets.get(contestant).name().toLowerCase().replace('_', ' ') + " in time!");
+                            losers.add(contestant);
                         }
 
                         if (isRunning) {
                             // Notifications
-                            if (timers.get(contestant) == 10) {
-                                contestant.sendMessage("You have 10 seconds left!");
-                            } else if (timers.get(contestant) == 60) {
-                                contestant.sendMessage("You have 1 minute left!");
+                            if (!losers.contains(contestant)) {
+                                if (timers.get(contestant) == 10) {
+                                    contestant.sendMessage("You have 10 seconds left!");
+                                } else if (timers.get(contestant) == 60) {
+                                    contestant.sendMessage("You have 1 minute left!");
+                                }
+                                contestant.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(ChatColor.RED + timers.get(contestant).toString()));
                             }
-                            contestant.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(ChatColor.RED + timers.get(contestant).toString()));
                         }
+                    }
+
+                    // Win condition
+                    if (losers.size() + 1 == contestants.size()) {
+                        for (Player contestant : contestants) {
+                            if (!losers.contains(contestant)) {
+                                Bukkit.broadcastMessage(ChatColor.GREEN + "Game over! " + contestant.getDisplayName() + " won!");
+                                deinitialize();
+                            }
+                        }
+                    } else if (losers.size() == contestants.size()) {
+                        Bukkit.broadcastMessage(ChatColor.GREEN + "Game over! It's a tie!");
+                        deinitialize();
                     }
                 } else {
                     // Win condition
@@ -73,6 +91,7 @@ public final class BlockShuffle extends JavaPlugin {
                                 maxEntry = entry;
                                 winners.clear();
                                 winners.add(entry.getKey());
+                                continue;
                             }
                             if (entry.getValue().equals(maxEntry.getValue())) {
                                 winners.add(entry.getKey());
@@ -207,6 +226,7 @@ public final class BlockShuffle extends JavaPlugin {
             Bukkit.broadcastMessage(ChatColor.GOLD + contestant.getDisplayName() + " must find " + prettyName + "!");
         }
         contestant.sendMessage(ChatColor.BLUE + "You must find and stand on " + prettyName);
+
     }
 
     public static void deinitialize() {
@@ -215,6 +235,7 @@ public final class BlockShuffle extends JavaPlugin {
         for (Player contestant : contestants) {
             team.removeEntry(contestant.getName());
             contestant.setScoreboard(manager.getNewScoreboard());
+            contestant.setGameMode(GameMode.SURVIVAL);
         }
 
         contestants.clear();
@@ -222,5 +243,6 @@ public final class BlockShuffle extends JavaPlugin {
         scores.clear();
         timers.clear();
         sameTargets.clear();
+        losers.clear();
     }
 }
